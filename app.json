@@ -58,7 +58,7 @@
 
                 },
         {
-                            "path": "lib/OrbitControls.js",
+                            "path": "lib/EditorControls.js",
                             "remote": false  /* Indicates that all class dependencies are concatenated into this file when build */
 
                         },{

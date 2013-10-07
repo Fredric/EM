@@ -62095,23 +62095,30 @@ Ext.define('Ext.viewport.Viewport', {
  * you should **not** use {@link Ext#onReady}.
  */
 
-Ext.define('EM.model.System',{
-    extend: Ext.data.Model ,
-    fields: [
-         {
-             name: 'SX',
-             type: 'float'
-         },
-         {
-             name: 'SY',
-             type: 'float'
-         },
-         {
-             name: 'SZ',
-             type: 'float'
-         },
-         'ObjName'
-     ]
+Ext.define('EM.model.System', {
+    extend:  Ext.data.Model ,
+    config: {
+
+        fields: [
+            'UniqueID',
+            {
+                name: 'SX',
+                type: 'float'
+            },
+            {
+                name: 'SY',
+                type: 'float'
+            },
+            {
+                name: 'SZ',
+                type: 'float'
+            },
+            'ObjName',
+            'ObjType',
+            'destination'
+        ]
+    }
+
 });
 
 Ext.define('EM.view.Scene', {
@@ -62121,7 +62128,11 @@ Ext.define('EM.view.Scene', {
         listeners: {
             painted: 'initScene',
             resize: 'onResize'
+
         }
+    },
+    kalle: function () {
+        alert('tap')
     },
     onResize: function (a) {
         var me = this,
@@ -62137,29 +62148,109 @@ Ext.define('EM.view.Scene', {
 
     initScene: function () {
         var me = this;
-
+        var destination;
+        var particle;
+        var from = {};
+        var to = {};
 
         me.scene = new THREE.Scene();
 
         me.initCamera();
         me.initRenderer();
         me.initControls();
-        me.initLights();
-        me.addSphere();
+        // me.initLights();
+        //me.addSphere();
 
         //me.addPlanet(-1050, 0, -5050, 'Sol' );
+        var PI2 = Math.PI * 2;
+        var systemMaterial = new THREE.ParticleCanvasMaterial({
 
+            color: 0xCCCCCC,
+            program: function (context) {
+
+                context.beginPath();
+                context.arc(0, 0, 1, 0, PI2, true);
+                context.fill();
+
+            }
+
+        });
+        var gateMaterial = new THREE.ParticleCanvasMaterial({
+
+            color: 0xFF3366,
+            program: function (context) {
+
+                context.beginPath();
+                context.arc(0, 0, 1, 0, PI2, true);
+                context.fill();
+
+            }
+
+        });
+
+        var geometry = new THREE.Geometry();
         Ext.StoreManager.first().each(function (record) {
 
-            me.addPlanet(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'));
+            if (record.get('ObjType') === "System") {
+                destination = null;
+                particle = new THREE.Particle(systemMaterial);
+                particle.position.x = record.get('SX');
+                particle.position.y = record.get('SY');
+                particle.position.z = record.get('SZ');
+                particle.scale.x = particle.scale.y = 30;
+                me.scene.add(particle);
+                geometry.vertices.push(particle.position);
+            }
+
+            if (record.get('ObjType') === "Gate") {
+
+                destination = Ext.StoreManager.first().getById(record.get('destination'));
+
+                particle = new THREE.Particle(gateMaterial);
+                particle.position.x = record.get('SX');
+                particle.position.y = record.get('SY');
+                particle.position.z = record.get('SZ');
+                particle.scale.x = particle.scale.y = 20;
+                me.scene.add(particle);
+                geometry.vertices.push(particle.position);
+                //me.addGate(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'), record);
+
+
+            }
+            if (record.get('ObjType') === "Wormhole") {
+                destination = Ext.StoreManager.first().getById(record.get('destination'));
+                particle = new THREE.Particle(gateMaterial);
+                particle.position.x = record.get('SX');
+                particle.position.y = record.get('SY');
+                particle.position.z = record.get('SZ');
+                particle.scale.x = particle.scale.y = 20;
+                me.scene.add(particle);
+                geometry.vertices.push(particle.position);
+                //me.addWormhole(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'), record);
+
+            }
+
+            if (destination) {
+                from = {
+                    x: record.get('SX'),
+                    y: record.get('SY'),
+                    z: record.get('SZ')
+                };
+                to = {
+                    x: destination.get('SX'),
+                    y: destination.get('SY'),
+                    z: destination.get('SZ')
+                }
+                me.addLine(from, to);
+            }
 
 
         }, me);
 
-        me.addHelpers();
+        // me.addHelpers();
         //me.initFog();
 
-        var axes = new THREE.AxisHelper(100);
+        var axes = new THREE.AxisHelper(1000);
         me.scene.add(axes);
 
         (function animloop() {
@@ -62205,15 +62296,15 @@ Ext.define('EM.view.Scene', {
         var me = this,
             SCREEN_WIDTH = me.element.getWidth(),
             SCREEN_HEIGHT = me.element.getHeight();
-        //me.renderer = new THREE.CanvasRenderer();
+        me.renderer = new THREE.CanvasRenderer();
 
-        me.renderer = new THREE.WebGLRenderer({antialias: true});
+        //me.renderer = new THREE.WebGLRenderer({antialias: true});
         me.renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
         me.element.dom.appendChild(me.renderer.domElement);
     },
     initControls: function () {
         var me = this;
-        me.controls = new THREE.OrbitControls(me.camera, me.renderer.domElement);
+        me.controls = new THREE.EditorControls(me.camera, me.renderer.domElement);
     },
     initLights: function () {
         var me = this;
@@ -62227,7 +62318,7 @@ Ext.define('EM.view.Scene', {
 
     updateMe: function () {
         var me = this;
-        me.controls.update();
+        //me.controls.update();
     },
 
     renderMe: function () {
@@ -62244,22 +62335,53 @@ Ext.define('EM.view.Scene', {
         me.scene.add(sphere);
 
     },
-    addPlanet: function (x, y, z, text) {
+    addPlanet: function (x, y, z, text, record) {
 
         var me = this,
-            sphereGeometry = new THREE.SphereGeometry(15),
-            textGeometry = THREE.TextGeometry(text, {
-
-            });
+            sphereGeometry = new THREE.SphereGeometry(15, 20);
         var sphereMaterial = new THREE.MeshLambertMaterial({color: 0x8888ff});
         var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        var txt = new THREE.Mesh(textGeometry, sphereMaterial);
         sphere.position.set(x, y, z);
-        txt.position.set(x,y,z);
         me.scene.add(sphere);
-        me.scene.add(txt);
+        record.sprite = sphere
 
 
+    },
+    addGate: function (x, y, z, text, record) {
+
+        var me = this,
+            sphereGeometry = new THREE.SphereGeometry(15);
+        var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xCCFF33});
+        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(x, y, z);
+        me.scene.add(sphere);
+        record.sprite = sphere
+    },
+    addWormhole: function (x, y, z, text, record) {
+
+        var me = this,
+            sphereGeometry = new THREE.SphereGeometry(15);
+        var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xFF3366});
+        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(x, y, z);
+        me.scene.add(sphere);
+        record.sprite = sphere
+
+//        var spritey = me.makeTextSprite(" " +text+ " ",
+//            { fontsize: 30, borderColor: {r: 255, g: 0, b: 0, a: 1.0}, backgroundColor: {r: 255, g: 100, b: 100, a: 0.8} });
+//        spritey.position.set(x, y, z);
+//        me.scene.add(spritey);
+
+    },
+    addLine: function (from, to) {
+        var me = this;
+        var lineGeometry = new THREE.Geometry();
+        var vertArray = lineGeometry.vertices;
+        vertArray.push(new THREE.Vector3(from.x, from.y, from.z), new THREE.Vector3(to.x, to.y, to.z));
+        lineGeometry.computeLineDistances();
+        var lineMaterial = new THREE.LineBasicMaterial({color:0x3366FF});
+        var line = new THREE.Line(lineGeometry, lineMaterial);
+        me.scene.add(line);
 
     },
     addSky: function () {
@@ -62275,22 +62397,22 @@ Ext.define('EM.view.Scene', {
         me.scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
     },
     addHelpers: function () {
-        var me = this,
-            axes = new THREE.AxisHelper(50);
+        var me = this;
+        //axes = new THREE.AxisHelper(4000);
 
-        var geometry = new THREE.SphereGeometry(30, 32, 16);
-        var material = new THREE.MeshLambertMaterial({ color: 0x000088 });
-        var mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(40, 40, 40);
-        me.scene.add(mesh);
+//        var geometry = new THREE.SphereGeometry(30, 32, 16);
+//        var material = new THREE.MeshLambertMaterial({ color: 0x000088 });
+//        var mesh = new THREE.Mesh(geometry, material);
+//        mesh.position.set(40, 40, 40);
+//        me.scene.add(mesh);
 
 
-        axes.position = mesh.position;
-        me.scene.add(axes);
+//        axes.position.set(40,40, 40);
+//        me.scene.add(axes);
 
         var gridXZ = new THREE.GridHelper(10000, 1000);
         gridXZ.setColors(new THREE.Color(0x006600), new THREE.Color(0x006600));
-        gridXZ.position.set(100, 0, 100);
+        gridXZ.position.set(0, 0, 0);
         me.scene.add(gridXZ);
 
 //        var gridXY = new THREE.GridHelper(100, 10);
@@ -62311,15 +62433,93 @@ Ext.define('EM.view.Scene', {
         var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
         var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
         me.scene.add(arrow);
+    },
+    makeTextSprite: function (message, parameters) {
+        return;
+        var me = this;
+        if (parameters === undefined) parameters = {};
+
+        var fontface = parameters.hasOwnProperty("fontface") ?
+            parameters["fontface"] : "Arial";
+
+        var fontsize = parameters.hasOwnProperty("fontsize") ?
+            parameters["fontsize"] : 18;
+
+        var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+            parameters["borderThickness"] : 4;
+
+        var borderColor = parameters.hasOwnProperty("borderColor") ?
+            parameters["borderColor"] : { r: 0, g: 0, b: 0, a: 1.0 };
+
+        var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+            parameters["backgroundColor"] : { r: 255, g: 255, b: 255, a: 1.0 };
+
+        var spriteAlignment = THREE.SpriteAlignment.topLeft;
+
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        context.font = "Bold " + fontsize + "px " + fontface;
+
+        // get size data (height depends only on font size)
+        var metrics = context.measureText(message);
+        var textWidth = metrics.width;
+
+        // background color
+        context.fillStyle = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
+            + backgroundColor.b + "," + backgroundColor.a + ")";
+        // border color
+        context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
+            + borderColor.b + "," + borderColor.a + ")";
+
+        context.lineWidth = borderThickness;
+        me.roundRect(context, borderThickness / 2, borderThickness / 2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
+        // 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+        // text color
+        context.fillStyle = "rgba(0, 0, 0, 1.0)";
+
+        context.fillText(message, borderThickness, fontsize + borderThickness);
+
+        // canvas contents will be used for a texture
+        var texture = new THREE.Texture(canvas)
+        texture.needsUpdate = true;
+
+        var spriteMaterial = new THREE.SpriteMaterial(
+            { map: texture, useScreenCoordinates: false, alignment: spriteAlignment });
+        var sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(100, 50, 1.0);
+        return sprite;
+    },
+    roundRect: function (ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
 });
 
 Ext.define('EM.store.Systems', {
     extend:  Ext.data.Store ,
                                   
-    
+
     config: {
         model: 'EM.model.System',
+        proxy:{
+            type:'memory',
+            reader:{
+                type:'json',
+                idProperty:'UniqueID'
+            }
+        },
         data: [
             {"UniqueID": "6", "PX": "0", "PY": "0", "PZ": "0", "SX": "1464", "SY": "0", "SZ": "-2120", "parent": "-1", "DateDiscovered": "2011-01-07 00:00:00", "DateLastVisit": "2011-01-07 00:00:00", "ObjType": "System", "ObjName": "A252", "ReportedBy": "Atollski", "Note": "", "sector": "UQ4", "destination": ""},
             {"UniqueID": "17", "PX": "0", "PY": "0", "PZ": "0", "SX": "1257", "SY": "-2", "SZ": "878", "parent": "-1", "DateDiscovered": "2011-01-07 00:00:00", "DateLastVisit": "2011-01-07 00:00:00", "ObjType": "System", "ObjName": "A542", "ReportedBy": "Atollski", "Note": "", "sector": "UQ2", "destination": ""},
@@ -62702,6 +62902,7 @@ Ext.define('EM.store.Systems', {
             {"UniqueID": "2222", "PX": "0", "PY": "0", "PZ": "0", "SX": "1069", "SY": "45", "SZ": "3802", "parent": "-1", "DateDiscovered": "2012-12-10 00:00:00", "DateLastVisit": "2012-12-10 00:00:00", "ObjType": "System", "ObjName": "R214", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2227", "PX": "0", "PY": "0", "PZ": "0", "SX": "-1150", "SY": "31", "SZ": "-2639", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "D913", "ReportedBy": "Caleb", "Note": "", "sector": "UQ3", "destination": ""}
         ]
+
     }
 
 

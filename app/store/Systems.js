@@ -4,6 +4,13 @@ Ext.define('EM.store.Systems', {
 
     config: {
         model: 'EM.model.System',
+        proxy:{
+            type:'memory',
+            reader:{
+                type:'json',
+                idProperty:'UniqueID'
+            }
+        },
         data: [
             {"UniqueID": "6", "PX": "0", "PY": "0", "PZ": "0", "SX": "1464", "SY": "0", "SZ": "-2120", "parent": "-1", "DateDiscovered": "2011-01-07 00:00:00", "DateLastVisit": "2011-01-07 00:00:00", "ObjType": "System", "ObjName": "A252", "ReportedBy": "Atollski", "Note": "", "sector": "UQ4", "destination": ""},
             {"UniqueID": "17", "PX": "0", "PY": "0", "PZ": "0", "SX": "1257", "SY": "-2", "SZ": "878", "parent": "-1", "DateDiscovered": "2011-01-07 00:00:00", "DateLastVisit": "2011-01-07 00:00:00", "ObjType": "System", "ObjName": "A542", "ReportedBy": "Atollski", "Note": "", "sector": "UQ2", "destination": ""},
@@ -380,12 +387,13 @@ Ext.define('EM.store.Systems', {
             {"UniqueID": "2193", "PX": "0", "PY": "0", "PZ": "0", "SX": "1106", "SY": "-4", "SZ": "-3568", "parent": "-1", "DateDiscovered": "2012-12-10 00:00:00", "DateLastVisit": "2012-12-10 00:00:00", "ObjType": "System", "ObjName": "G640", "ReportedBy": "Caleb", "Note": "", "sector": "UQ4", "destination": ""},
             {"UniqueID": "2196", "PX": "0", "PY": "0", "PZ": "0", "SX": "2860", "SY": "7", "SZ": "1283", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "Z385", "ReportedBy": "kogasa", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2199", "PX": "0", "PY": "0", "PZ": "0", "SX": "2147", "SY": "42", "SZ": "1394", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "G335", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
-            {"UniqueID": "2206", "PX": "0", "PY": "0", "PZ": "0", "SX": "2032", "SY": "-44", "SZ": "1679", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "L606", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
+            {"UniqueID": "2206", "PX": "0", "PY": "0", "PZ": "0", "SX": "2032", "SY": "-46", "SZ": "1679", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "L606", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2213", "PX": "0", "PY": "0", "PZ": "0", "SX": "2419", "SY": "44", "SZ": "2675", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "I647", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2217", "PX": "0", "PY": "0", "PZ": "0", "SX": "2223", "SY": "17", "SZ": "2863", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "T591", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2222", "PX": "0", "PY": "0", "PZ": "0", "SX": "1069", "SY": "45", "SZ": "3802", "parent": "-1", "DateDiscovered": "2012-12-10 00:00:00", "DateLastVisit": "2012-12-10 00:00:00", "ObjType": "System", "ObjName": "R214", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2227", "PX": "0", "PY": "0", "PZ": "0", "SX": "-1150", "SY": "31", "SZ": "-2639", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "D913", "ReportedBy": "Caleb", "Note": "", "sector": "UQ3", "destination": ""}
         ]
+
     }
 
 

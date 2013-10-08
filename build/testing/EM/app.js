@@ -62160,6 +62160,7 @@ Ext.define('EM.view.Scene', {
         me.initControls();
         // me.initLights();
         //me.addSphere();
+        me.addHelpers();
 
         //me.addPlanet(-1050, 0, -5050, 'Sol' );
         var PI2 = Math.PI * 2;
@@ -62200,6 +62201,8 @@ Ext.define('EM.view.Scene', {
                 particle.scale.x = particle.scale.y = 30;
                 me.scene.add(particle);
                 geometry.vertices.push(particle.position);
+
+
             }
 
             if (record.get('ObjType') === "Gate") {
@@ -62250,8 +62253,8 @@ Ext.define('EM.view.Scene', {
         // me.addHelpers();
         //me.initFog();
 
-        var axes = new THREE.AxisHelper(1000);
-        me.scene.add(axes);
+//        var axes = new THREE.AxisHelper(1000);
+//        me.scene.add(axes);
 
         (function animloop() {
             requestAnimationFrame(animloop);
@@ -62264,12 +62267,14 @@ Ext.define('EM.view.Scene', {
             SCREEN_WIDTH = me.element.getWidth(),
             SCREEN_HEIGHT = me.element.getHeight();
 
-        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 50000;
+        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 100000;
 
         me.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
         me.scene.add(me.camera);
         me.camera.position.set(0, -10000, 0);
         me.camera.lookAt(me.scene.position);
+
+        me.camera.rotation.z = 0 * Math.PI / 180
 
 
         /////////
@@ -62428,11 +62433,11 @@ Ext.define('EM.view.Scene', {
 //        me.scene.add(gridYZ);
 
         // direction (normalized), origin, length, color(hex)
-        var origin = new THREE.Vector3(50, 100, 50);
-        var terminus = new THREE.Vector3(75, 75, 75);
-        var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
-        var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
-        me.scene.add(arrow);
+//        var origin = new THREE.Vector3(50, 100, 50);
+//        var terminus = new THREE.Vector3(75, 75, 75);
+//        var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
+//        var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
+//        me.scene.add(arrow);
     },
     makeTextSprite: function (message, parameters) {
         return;
@@ -62896,7 +62901,7 @@ Ext.define('EM.store.Systems', {
             {"UniqueID": "2193", "PX": "0", "PY": "0", "PZ": "0", "SX": "1106", "SY": "-4", "SZ": "-3568", "parent": "-1", "DateDiscovered": "2012-12-10 00:00:00", "DateLastVisit": "2012-12-10 00:00:00", "ObjType": "System", "ObjName": "G640", "ReportedBy": "Caleb", "Note": "", "sector": "UQ4", "destination": ""},
             {"UniqueID": "2196", "PX": "0", "PY": "0", "PZ": "0", "SX": "2860", "SY": "7", "SZ": "1283", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "Z385", "ReportedBy": "kogasa", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2199", "PX": "0", "PY": "0", "PZ": "0", "SX": "2147", "SY": "42", "SZ": "1394", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "G335", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
-            {"UniqueID": "2206", "PX": "0", "PY": "0", "PZ": "0", "SX": "2032", "SY": "-44", "SZ": "1679", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "L606", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
+            {"UniqueID": "2206", "PX": "0", "PY": "0", "PZ": "0", "SX": "2032", "SY": "-46", "SZ": "1679", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "L606", "ReportedBy": "Austin", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2213", "PX": "0", "PY": "0", "PZ": "0", "SX": "2419", "SY": "44", "SZ": "2675", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "I647", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2217", "PX": "0", "PY": "0", "PZ": "0", "SX": "2223", "SY": "17", "SZ": "2863", "parent": "-1", "DateDiscovered": "2012-12-26 00:00:00", "DateLastVisit": "2012-12-26 00:00:00", "ObjType": "System", "ObjName": "T591", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},
             {"UniqueID": "2222", "PX": "0", "PY": "0", "PZ": "0", "SX": "1069", "SY": "45", "SZ": "3802", "parent": "-1", "DateDiscovered": "2012-12-10 00:00:00", "DateLastVisit": "2012-12-10 00:00:00", "ObjType": "System", "ObjName": "R214", "ReportedBy": "Caleb", "Note": "", "sector": "UQ2", "destination": ""},

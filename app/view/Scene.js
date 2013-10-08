@@ -37,6 +37,7 @@ Ext.define('EM.view.Scene', {
         me.initControls();
         // me.initLights();
         //me.addSphere();
+        me.addHelpers();
 
         //me.addPlanet(-1050, 0, -5050, 'Sol' );
         var PI2 = Math.PI * 2;
@@ -129,8 +130,8 @@ Ext.define('EM.view.Scene', {
         // me.addHelpers();
         //me.initFog();
 
-        var axes = new THREE.AxisHelper(1000);
-        me.scene.add(axes);
+//        var axes = new THREE.AxisHelper(1000);
+//        me.scene.add(axes);
 
         (function animloop() {
             requestAnimationFrame(animloop);
@@ -143,12 +144,14 @@ Ext.define('EM.view.Scene', {
             SCREEN_WIDTH = me.element.getWidth(),
             SCREEN_HEIGHT = me.element.getHeight();
 
-        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 50000;
+        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 100000;
 
         me.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
         me.scene.add(me.camera);
         me.camera.position.set(0, -10000, 0);
         me.camera.lookAt(me.scene.position);
+
+        me.camera.rotation.z = 0 * Math.PI / 180
 
 
         /////////
@@ -307,11 +310,11 @@ Ext.define('EM.view.Scene', {
 //        me.scene.add(gridYZ);
 
         // direction (normalized), origin, length, color(hex)
-        var origin = new THREE.Vector3(50, 100, 50);
-        var terminus = new THREE.Vector3(75, 75, 75);
-        var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
-        var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
-        me.scene.add(arrow);
+//        var origin = new THREE.Vector3(50, 100, 50);
+//        var terminus = new THREE.Vector3(75, 75, 75);
+//        var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
+//        var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
+//        me.scene.add(arrow);
     },
     makeTextSprite: function (message, parameters) {
         return;

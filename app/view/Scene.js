@@ -2,6 +2,7 @@ Ext.define('EM.view.Scene', {
     extend: 'Ext.Component',
     fullscreen: true,
     config: {
+        colissionArray: [],
         listeners: {
             painted: 'initScene',
             resize: 'onResize'
@@ -108,8 +109,6 @@ Ext.define('EM.view.Scene', {
                 me.scene.add(particle);
                 geometry.vertices.push(particle.position);
                 //me.addWormhole(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'), record);
-
-
 
 
             }
@@ -256,7 +255,7 @@ Ext.define('EM.view.Scene', {
         me.scene.add(sphere);
         record.sprite = sphere
 
-        var spritey = me.makeTextSprite(" " +text+ " ",
+        var spritey = me.makeTextSprite(" " + text + " ",
             { fontsize: 30, borderColor: {r: 255, g: 0, b: 0, a: 1.0}, backgroundColor: {r: 255, g: 100, b: 100, a: 0.8} });
         spritey.position.set(x, y, z);
         me.scene.add(spritey);
@@ -268,7 +267,7 @@ Ext.define('EM.view.Scene', {
         var vertArray = lineGeometry.vertices;
         vertArray.push(new THREE.Vector3(from.x, from.y, from.z), new THREE.Vector3(to.x, to.y, to.z));
         lineGeometry.computeLineDistances();
-        var lineMaterial = new THREE.LineBasicMaterial({color:0x3366FF});
+        var lineMaterial = new THREE.LineBasicMaterial({color: 0x3366FF});
         var line = new THREE.Line(lineGeometry, lineMaterial);
         me.scene.add(line);
 
@@ -394,30 +393,92 @@ Ext.define('EM.view.Scene', {
         ctx.fill();
         ctx.stroke();
     },
-    addTxt:function(x, z, text){
+    addTxt: function (x, z, text) {
         var me = this;
         var canvas1 = document.createElement('canvas');
-       	var context1 = canvas1.getContext('2d');
-       	context1.font = "Bold 40px Arial";
-       	context1.fillStyle = "rgba(255,0,0,0.95)";
-           context1.fillText(text, 0, 60);
+        var context1 = canvas1.getContext('2d');
+        context1.font = "Bold 40px Arial";
+        context1.fillStyle = "rgba(255,0,0,0.95)";
+        context1.fillText(text, 0, 60);
 
-       	// canvas contents will be used for a texture
-       	var texture1 = new THREE.Texture(canvas1)
-       	texture1.needsUpdate = true;
+        // canvas contents will be used for a texture
+        var texture1 = new THREE.Texture(canvas1)
+        texture1.needsUpdate = true;
 
-           var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
-           material1.transparent = true;
+        var material1 = new THREE.MeshBasicMaterial({map: texture1, side: THREE.DoubleSide });
+        material1.transparent = true;
 
-        console.log(canvas1.width)
-           var mesh1 = new THREE.Mesh(
-               new THREE.PlaneGeometry(400, canvas1.height),
-               material1
-             );
-       	mesh1.position.set(x,50,z);
+
+        var mesh1 = new THREE.Mesh(
+            new THREE.PlaneGeometry(400, canvas1.height),
+            material1
+        );
+
+
+        mesh1.position.set(x, 50, z);
+
         mesh1.rotation.x = 90 * Math.PI / 180
+        var ray
+        var collisionResults1 = [];
+        var collisionResults2 = [];
+
+        var collisions, i,
+                    // Maximum distance from the origin before we consider collision
+                    distance = 32;
+
+        me.caster = new THREE.Raycaster();
+        me.scene.add(mesh1);
+        me.rays = [
+            new THREE.Vector3(0, 0, 1),
+            new THREE.Vector3(1, 0, 1),
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(1, 0, -1),
+            new THREE.Vector3(0, 0, -1),
+            new THREE.Vector3(-1, 0, -1),
+            new THREE.Vector3(-1, 0, 0),
+            new THREE.Vector3(-1, 0, 1)
+        ];
+
+        for (i = 0; i < this.rays.length; i += 1) {
+            // We reset the raycaster to this direction
+            me.caster.set(mesh1.position, this.rays[i]);
+            // Test if we intersect with any obstacle mesh
+            collisions = this.caster.intersectObjects(me.getColissionArray());
+            // And disable that direction if we do
+            if (collisions.length > 0 && collisions[0].distance <= distance) {
+                // Yep, this.rays[i] gives us : 0 => up, 1 => up-left, 2 => left, ...
+
+                console.log(text)
+//                if ((i === 0 || i === 1 || i === 7) && this.direction.z === 1) {
+//                    this.direction.setZ(0);
+//                } else if ((i === 3 || i === 4 || i === 5) && this.direction.z === -1) {
+//                    this.direction.setZ(0);
+//                }
+//                if ((i === 1 || i === 2 || i === 3) && this.direction.x === 1) {
+//                    this.direction.setX(0);
+//                } else if ((i === 5 || i === 6 || i === 7) && this.direction.x === -1) {
+//                    this.direction.setX(0);
+//                }
+            }
+        }
+
+//        ray = new THREE.Raycaster(mesh1.position.clone(), new THREE.Vector3(0, 0, 1).normalize(), 0, 30);
+//        collisionResults1 = ray.intersectObjects(me.getColissionArray());
+//
+//
+//        ray = new THREE.Raycaster(mesh1.position.clone(), new THREE.Vector3(0, 0, -1).normalize(), 0, 30);
+//        collisionResults2 = ray.intersectObjects(me.getColissionArray());
+
+        //if (collisionResults1.length === 0 && collisionResults2.length === 0) {
 
 
-       	me.scene.add( mesh1 );
+        //} else {
+         //   console.log(text, ray)
+
+
+       // }
+
+
+        me.getColissionArray().push(mesh1)
     }
 });

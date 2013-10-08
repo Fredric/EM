@@ -1,0 +1,58 @@
+[AS] SeeJay
+799
+5,164,263,271
+Build Constructor
+Empty
+Empty
+Empty
+Empty
+49832
+1449
+-40118
+3500
+0
+-1500
+Serene
+100
+100
+100
+100
+100
+100
+100
+100
+100
+[AS] Nubarus
+Clan
+290
+100
+100
+100
+100
+100
+100
+100
+
+
+
+
+
+0
+Maxim-R
+Fusion Laser 
+Excalibur
+Empty
+Empty
+Empty
+Empty
+Empty
+Empty
+Empty
+Mantis Jump Drive
+Shield Boost X5 
+Shield Recharger 
+Repair Sys C3 
+Cannon Heatsink 
+Cannon Relay Sys 
+Deploy Constructor
+Mine/Tractor Beam 

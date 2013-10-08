@@ -39,6 +39,7 @@ Ext.define('EM.view.Scene', {
         //me.addSphere();
         me.addHelpers();
 
+
         //me.addPlanet(-1050, 0, -5050, 'Sol' );
         var PI2 = Math.PI * 2;
         var systemMaterial = new THREE.ParticleCanvasMaterial({
@@ -73,7 +74,7 @@ Ext.define('EM.view.Scene', {
                 destination = null;
                 particle = new THREE.Particle(systemMaterial);
                 particle.position.x = record.get('SX');
-                particle.position.y = record.get('SY');
+                particle.position.y = 0 //record.get('SY');
                 particle.position.z = record.get('SZ');
                 particle.scale.x = particle.scale.y = 30;
                 me.scene.add(particle);
@@ -88,7 +89,7 @@ Ext.define('EM.view.Scene', {
 
                 particle = new THREE.Particle(gateMaterial);
                 particle.position.x = record.get('SX');
-                particle.position.y = record.get('SY');
+                particle.position.y = 0 //record.get('SY');
                 particle.position.z = record.get('SZ');
                 particle.scale.x = particle.scale.y = 20;
                 me.scene.add(particle);
@@ -101,28 +102,33 @@ Ext.define('EM.view.Scene', {
                 destination = Ext.StoreManager.first().getById(record.get('destination'));
                 particle = new THREE.Particle(gateMaterial);
                 particle.position.x = record.get('SX');
-                particle.position.y = record.get('SY');
+                particle.position.y = 0//record.get('SY');
                 particle.position.z = record.get('SZ');
                 particle.scale.x = particle.scale.y = 20;
                 me.scene.add(particle);
                 geometry.vertices.push(particle.position);
                 //me.addWormhole(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'), record);
 
+
+
+
             }
 
             if (destination) {
                 from = {
                     x: record.get('SX'),
-                    y: record.get('SY'),
+                    y: 0,//record.get('SY'),
                     z: record.get('SZ')
                 };
                 to = {
                     x: destination.get('SX'),
-                    y: destination.get('SY'),
+                    y: 0,//destination.get('SY'),
                     z: destination.get('SZ')
                 }
                 me.addLine(from, to);
             }
+
+            me.addTxt(record.get('SX'), record.get('SZ'), record.get('ObjName'))
 
 
         }, me);
@@ -151,6 +157,7 @@ Ext.define('EM.view.Scene', {
         me.camera.position.set(0, -10000, 0);
         me.camera.lookAt(me.scene.position);
 
+        me.camera.rotation.x = 90 * Math.PI / 180
         me.camera.rotation.z = 0 * Math.PI / 180
 
 
@@ -249,10 +256,10 @@ Ext.define('EM.view.Scene', {
         me.scene.add(sphere);
         record.sprite = sphere
 
-//        var spritey = me.makeTextSprite(" " +text+ " ",
-//            { fontsize: 30, borderColor: {r: 255, g: 0, b: 0, a: 1.0}, backgroundColor: {r: 255, g: 100, b: 100, a: 0.8} });
-//        spritey.position.set(x, y, z);
-//        me.scene.add(spritey);
+        var spritey = me.makeTextSprite(" " +text+ " ",
+            { fontsize: 30, borderColor: {r: 255, g: 0, b: 0, a: 1.0}, backgroundColor: {r: 255, g: 100, b: 100, a: 0.8} });
+        spritey.position.set(x, y, z);
+        me.scene.add(spritey);
 
     },
     addLine: function (from, to) {
@@ -317,7 +324,7 @@ Ext.define('EM.view.Scene', {
 //        me.scene.add(arrow);
     },
     makeTextSprite: function (message, parameters) {
-        return;
+
         var me = this;
         if (parameters === undefined) parameters = {};
 
@@ -386,5 +393,31 @@ Ext.define('EM.view.Scene', {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+    },
+    addTxt:function(x, z, text){
+        var me = this;
+        var canvas1 = document.createElement('canvas');
+       	var context1 = canvas1.getContext('2d');
+       	context1.font = "Bold 40px Arial";
+       	context1.fillStyle = "rgba(255,0,0,0.95)";
+           context1.fillText(text, 0, 60);
+
+       	// canvas contents will be used for a texture
+       	var texture1 = new THREE.Texture(canvas1)
+       	texture1.needsUpdate = true;
+
+           var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+           material1.transparent = true;
+
+        console.log(canvas1.width)
+           var mesh1 = new THREE.Mesh(
+               new THREE.PlaneGeometry(400, canvas1.height),
+               material1
+             );
+       	mesh1.position.set(x,50,z);
+        mesh1.rotation.x = 90 * Math.PI / 180
+
+
+       	me.scene.add( mesh1 );
     }
 });

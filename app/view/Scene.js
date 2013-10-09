@@ -128,9 +128,23 @@ Ext.define('EM.view.Scene', {
             }
 
             me.addTxt(record.get('SX'), record.get('SZ'), record.get('ObjName'))
+            //me.addCube(record.get('SX'), 0, record.get('SZ'))
 
 
         }, me);
+
+//        var origin = new THREE.Vector3(-1000, 0, 1000);
+//        var terminus = new THREE.Vector3(2000, 0, 1000);
+//        var direction = new THREE.Vector3().subVectors(terminus, origin);
+//
+//
+//
+//        //me.scene.add( new THREE.ArrowHelper(terminus, origin, 1000, 0xffffff));
+//
+//       var ray = new THREE.Raycaster(origin.clone(), terminus);
+//        var collisionResults = ray.intersectObjects(me.getColissionArray());
+//        console.log(me.getColissionArray().length, collisionResults);
+
 
         // me.addHelpers();
         //me.initFog();
@@ -143,6 +157,14 @@ Ext.define('EM.view.Scene', {
             me.renderMe();
             me.updateMe()
         })();
+
+
+//        Ext.each(me.getColissionArray(), function(mesh){
+//            if(me.checkCube(mesh)){
+//                me.scene.remove(mesh)
+//            }
+//        });
+
     },
     initCamera: function () {
         var me = this,
@@ -415,21 +437,59 @@ Ext.define('EM.view.Scene', {
         );
 
 
-        mesh1.position.set(x, 50, z);
-
+        mesh1.position.set(x, 0, z);
         mesh1.rotation.x = 90 * Math.PI / 180
-        var ray
-        var collisionResults1 = [];
-        var collisionResults2 = [];
+        me.scene.add(mesh1);
+
+        mesh1.updateMatrixWorld()
+
+        me.getColissionArray().push(mesh1)
+
+        if(me.checkCube(mesh1)){
+            mesh1.translateX(100);
+            mesh1.translateY(100);
+            mesh1.translateZ(250);
+
+            mesh1.updateMatrixWorld()
+            if(me.checkCube(mesh1)){
+                mesh1.translateZ(500);
+                mesh1.updateMatrixWorld()
+                if(me.checkCube(mesh1)){
+                    console.log('still')
+                }
+
+                //me.scene.remove(mesh1)
+
+            }
+
+        }
+
+    },
+    addCube: function (x, y, z) {
+        var me = this,
+            cubeGeometry = new THREE.CubeGeometry(400, 100, 10);
+        var cubeMaterial = new THREE.MeshBasicMaterial({color: 0x8888ff});
+        var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.set(x, y, z);
+        cube.rotation.x = 90 * Math.PI / 180
+        me.scene.add(cube);
+        me.getColissionArray().push(cube)
+
+
+    },
+    checkCube: function (cube) {
+        var ray,
+            hit = false,
+            me = this;
 
         var collisions, i,
-                    // Maximum distance from the origin before we consider collision
-                    distance = 32;
+        // Maximum distance from the origin before we consider collision
+            distance = 200;
 
         me.caster = new THREE.Raycaster();
-        me.scene.add(mesh1);
+        //me.scene.add(cube);
         me.rays = [
-            new THREE.Vector3(0, 0, 1),
+            new THREE.Vector3(1, 0, -1),
             new THREE.Vector3(1, 0, 1),
             new THREE.Vector3(1, 0, 0),
             new THREE.Vector3(1, 0, -1),
@@ -437,48 +497,43 @@ Ext.define('EM.view.Scene', {
             new THREE.Vector3(-1, 0, -1),
             new THREE.Vector3(-1, 0, 0),
             new THREE.Vector3(-1, 0, 1)
+
         ];
-
+        //console.log(me.rays[0])
         for (i = 0; i < this.rays.length; i += 1) {
-            // We reset the raycaster to this direction
-            me.caster.set(mesh1.position, this.rays[i]);
-            // Test if we intersect with any obstacle mesh
-            collisions = this.caster.intersectObjects(me.getColissionArray());
-            // And disable that direction if we do
-            if (collisions.length > 0 && collisions[0].distance <= distance) {
-                // Yep, this.rays[i] gives us : 0 => up, 1 => up-left, 2 => left, ...
+            me.caster.set(cube.position.clone()
+                , this.rays[i]);
 
-                console.log(text)
-//                if ((i === 0 || i === 1 || i === 7) && this.direction.z === 1) {
-//                    this.direction.setZ(0);
-//                } else if ((i === 3 || i === 4 || i === 5) && this.direction.z === -1) {
-//                    this.direction.setZ(0);
-//                }
-//                if ((i === 1 || i === 2 || i === 3) && this.direction.x === 1) {
-//                    this.direction.setX(0);
-//                } else if ((i === 5 || i === 6 || i === 7) && this.direction.x === -1) {
-//                    this.direction.setX(0);
-//                }
+
+            //me.scene.add(new THREE.ArrowHelper(this.rays[i].normalize()), cube.position, 200, 0xffffff )
+            collisions = this.caster.intersectObjects(me.getColissionArray());
+            if (collisions.length > 0 && collisions[0].distance <= distance) {
+                //console.log(i, collisions[0].distance)
+                hit = true
             }
         }
 
-//        ray = new THREE.Raycaster(mesh1.position.clone(), new THREE.Vector3(0, 0, 1).normalize(), 0, 30);
-//        collisionResults1 = ray.intersectObjects(me.getColissionArray());
+//        var originPoint = cube.position.clone();
 //
 //
-//        ray = new THREE.Raycaster(mesh1.position.clone(), new THREE.Vector3(0, 0, -1).normalize(), 0, 30);
-//        collisionResults2 = ray.intersectObjects(me.getColissionArray());
+//        var hit = false;
+//        for (var vertexIndex = 0; vertexIndex < cube.geometry.vertices.length; vertexIndex++) {
+//            var localVertex = cube.geometry.vertices[vertexIndex].clone();
+//            var globalVertex = localVertex.applyMatrix4(cube.matrix);
+//            var directionVector = globalVertex.sub(cube.position);
+//            var ray = new THREE.Raycaster(originPoint, directionVector.clone());
+//            var collisionResults = ray.intersectObjects(me.getColissionArray());
+//
+//
+//            if (collisionResults.length > 0 && collisionResults[0].distance < 2000) {
+//
+//                hit = true
+//
+//            }
+//
+//        }
 
-        //if (collisionResults1.length === 0 && collisionResults2.length === 0) {
+        return hit === true ? hit : false
 
-
-        //} else {
-         //   console.log(text, ray)
-
-
-       // }
-
-
-        me.getColissionArray().push(mesh1)
     }
 });

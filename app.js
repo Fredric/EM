@@ -14,14 +14,19 @@ Ext.application({
     name: 'EM',
 
     requires: [
-        'Ext.MessageBox'
+        'Ext.MessageBox',
+        'Ext.draw.*'
     ],
+    controllers:[
+        'Map'
+    ],
+
     models:[
     'System'
     ],
 
     views: [
-        'Scene'
+        'Scene', 'Map'
     ],
 
     stores:[

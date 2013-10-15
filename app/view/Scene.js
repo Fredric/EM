@@ -3,6 +3,7 @@ Ext.define('EM.view.Scene', {
     fullscreen: true,
     config: {
         colissionArray: [],
+        systems: [],
         listeners: {
             painted: 'initScene',
             resize: 'onResize'
@@ -72,15 +73,16 @@ Ext.define('EM.view.Scene', {
         Ext.StoreManager.first().each(function (record) {
 
             if (record.get('ObjType') === "System") {
-                destination = null;
-                particle = new THREE.Particle(systemMaterial);
-                particle.position.x = record.get('SX');
-                particle.position.y = 0 //record.get('SY');
-                particle.position.z = record.get('SZ');
-                particle.scale.x = particle.scale.y = 30;
-                me.scene.add(particle);
-                geometry.vertices.push(particle.position);
-
+//                destination = null;
+//                particle = new THREE.Particle(systemMaterial);
+//                particle.position.x = record.get('SX');
+//                particle.position.y = 0 //record.get('SY');
+//                particle.position.z = record.get('SZ');
+//                particle.scale.x = particle.scale.y = 30;
+//                me.scene.add(particle);
+//                me.getSystems().push(particle);
+//                geometry.vertices.push(particle.position);
+                me.addPlanet(record.get('SX'), record.get('SY'), record.get('SZ'), record.get('ObjName'), record);
 
             }
 
@@ -124,33 +126,17 @@ Ext.define('EM.view.Scene', {
                     y: 0,//destination.get('SY'),
                     z: destination.get('SZ')
                 }
-                me.addLine(from, to);
+                me.addLine(from, to, 0x003366);
             }
+            // if (record.get('sector').indexOf('KQ') !== -1) {
 
-            me.addTxt(record.get('SX'), record.get('SZ'), record.get('ObjName'))
-            //me.addCube(record.get('SX'), 0, record.get('SZ'))
+            // me.addCube(record.get('SX'), 0, record.get('SZ'))
+
+            //  }
 
 
         }, me);
 
-//        var origin = new THREE.Vector3(-1000, 0, 1000);
-//        var terminus = new THREE.Vector3(2000, 0, 1000);
-//        var direction = new THREE.Vector3().subVectors(terminus, origin);
-//
-//
-//
-//        //me.scene.add( new THREE.ArrowHelper(terminus, origin, 1000, 0xffffff));
-//
-//       var ray = new THREE.Raycaster(origin.clone(), terminus);
-//        var collisionResults = ray.intersectObjects(me.getColissionArray());
-//        console.log(me.getColissionArray().length, collisionResults);
-
-
-        // me.addHelpers();
-        //me.initFog();
-
-//        var axes = new THREE.AxisHelper(1000);
-//        me.scene.add(axes);
 
         (function animloop() {
             requestAnimationFrame(animloop);
@@ -159,11 +145,41 @@ Ext.define('EM.view.Scene', {
         })();
 
 
-//        Ext.each(me.getColissionArray(), function(mesh){
-//            if(me.checkCube(mesh)){
-//                me.scene.remove(mesh)
-//            }
-//        });
+        Ext.each(me.getColissionArray(), function (mesh) {
+            me.loopPosition(mesh)
+            mesh.rotation.x = 90 * Math.PI / 180
+            mesh.translateZ(4)
+            mesh.visible = false;
+        });
+        Ext.each(me.getColissionArray(), function (mesh) {
+
+        });
+
+        //document.addEventListener('mousemove', onMouseMove, false);
+
+
+    },
+    onMouseMove: function () {
+
+    },
+    loopPosition: function (mesh) {
+        var me = this;
+
+        var origo = mesh.position.clone()
+
+        mesh.translateZ(75)
+        mesh.position.setX(origo.x + 400)
+
+        while (me.checkMyPosition(mesh)) {
+
+            mesh.translateZ(75)
+            mesh.position.setX(origo.x + 400)
+
+        }
+        var endpoint = mesh.position.clone()
+
+        endpoint.setX(endpoint.x - mesh.geometry.width / 2 - 10);
+        //mesh.lableLine = me.addLine(origo, endpoint, 0x666666)
 
     },
     initCamera: function () {
@@ -171,33 +187,15 @@ Ext.define('EM.view.Scene', {
             SCREEN_WIDTH = me.element.getWidth(),
             SCREEN_HEIGHT = me.element.getHeight();
 
-        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 100000;
+        var VIEW_ANGLE = 90, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 10000;
 
         me.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
         me.scene.add(me.camera);
-        me.camera.position.set(0, -10000, 0);
+        me.camera.position.set(0, -5000, 0);
         me.camera.lookAt(me.scene.position);
 
         me.camera.rotation.x = 90 * Math.PI / 180
         me.camera.rotation.z = 0 * Math.PI / 180
-
-
-        /////////
-        // SKY //
-        /////////
-
-        // recommend either a skybox or fog effect (can't use both at the same time)
-        // without one of these, the scene's background color is determined by webpage background
-
-        // make sure the camera's "far" value is large enough so that it will render the skyBox!
-
-        // fog must be added to scene before first render
-
-
-        //renderer.render(me.scene, me.camera)
-
-
-        //me.controls.update()
 
 
     },
@@ -214,7 +212,7 @@ Ext.define('EM.view.Scene', {
     },
     initControls: function () {
         var me = this;
-        me.controls = new THREE.EditorControls(me.camera, me.renderer.domElement);
+        me.controls = new THREE.OrbitControls(me.camera, me.renderer.domElement);
     },
     initLights: function () {
         var me = this;
@@ -228,7 +226,43 @@ Ext.define('EM.view.Scene', {
 
     updateMe: function () {
         var me = this;
-        //me.controls.update();
+        me.controls.update();
+        if (me.camera.position.y >= -1001) {
+            var frustum = new THREE.Frustum();
+            var cameraViewProjectionMatrix = new THREE.Matrix4();
+
+            // every time the camera or objects change position (or every frame)
+
+            me.camera.updateMatrixWorld(); // make sure the camera matrix is updated
+            me.camera.matrixWorldInverse.getInverse(me.camera.matrixWorld);
+            cameraViewProjectionMatrix.multiplyMatrices(me.camera.projectionMatrix, me.camera.matrixWorldInverse);
+            frustum.setFromMatrix(cameraViewProjectionMatrix);
+
+            // frustum is now ready to check all the objects you need
+            var c = 0
+            var visibleTexts = [];
+
+
+            Ext.each(me.getSystems(), function (mesh) {
+                var arr = frustum.intersectsObject(mesh);
+                mesh.text.visible = arr
+                if(mesh.lableLine){
+                                   mesh.lableLine.visible = arr
+                               }
+
+            });
+
+
+        } else {
+            Ext.each(me.getSystems(), function (mesh) {
+
+                mesh.text.visible = false
+                if(mesh.lableLine){
+                    mesh.lableLine.visible = false
+                }
+
+            });
+        }
     },
 
     renderMe: function () {
@@ -248,12 +282,15 @@ Ext.define('EM.view.Scene', {
     addPlanet: function (x, y, z, text, record) {
 
         var me = this,
-            sphereGeometry = new THREE.SphereGeometry(15, 20);
-        var sphereMaterial = new THREE.MeshLambertMaterial({color: 0x8888ff});
+            sphereGeometry = new THREE.CircleGeometry(15, 3);
+        var sphereMaterial = new THREE.MeshNormalMaterial({color: 0x8888ff});
         var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(x, y, z);
         me.scene.add(sphere);
-        record.sprite = sphere
+        record.mesh = sphere;
+        sphere.record = record;
+        sphere.text = me.addTxt(record.get('SX'), record.get('SZ'), record.get('ObjName'))
+        me.getSystems().push(sphere);
 
 
     },
@@ -283,16 +320,17 @@ Ext.define('EM.view.Scene', {
         me.scene.add(spritey);
 
     },
-    addLine: function (from, to) {
+    addLine: function (from, to, color) {
         var me = this;
         var lineGeometry = new THREE.Geometry();
         var vertArray = lineGeometry.vertices;
         vertArray.push(new THREE.Vector3(from.x, from.y, from.z), new THREE.Vector3(to.x, to.y, to.z));
         lineGeometry.computeLineDistances();
-        var lineMaterial = new THREE.LineBasicMaterial({color: 0x3366FF});
+        var lineMaterial = new THREE.LineBasicMaterial({color: color});
         var line = new THREE.Line(lineGeometry, lineMaterial);
+        line.translateY(4)
         me.scene.add(line);
-
+        return line;
     },
     addSky: function () {
         var me = this;
@@ -308,167 +346,54 @@ Ext.define('EM.view.Scene', {
     },
     addHelpers: function () {
         var me = this;
-        //axes = new THREE.AxisHelper(4000);
-
-//        var geometry = new THREE.SphereGeometry(30, 32, 16);
-//        var material = new THREE.MeshLambertMaterial({ color: 0x000088 });
-//        var mesh = new THREE.Mesh(geometry, material);
-//        mesh.position.set(40, 40, 40);
-//        me.scene.add(mesh);
-
-
-//        axes.position.set(40,40, 40);
-//        me.scene.add(axes);
 
         var gridXZ = new THREE.GridHelper(10000, 1000);
         gridXZ.setColors(new THREE.Color(0x006600), new THREE.Color(0x006600));
         gridXZ.position.set(0, 0, 0);
         me.scene.add(gridXZ);
 
-//        var gridXY = new THREE.GridHelper(100, 10);
-//        gridXY.position.set(100, 100, 0);
-//        gridXY.rotation.x = Math.PI / 2;
-//        gridXY.setColors(new THREE.Color(0x000066), new THREE.Color(0x000066));
-//        me.scene.add(gridXY);
-//
-//        var gridYZ = new THREE.GridHelper(100, 10);
-//        gridYZ.position.set(0, 100, 100);
-//        gridYZ.rotation.z = Math.PI / 2;
-//        gridYZ.setColors(new THREE.Color(0x660000), new THREE.Color(0x660000));
-//        me.scene.add(gridYZ);
-
-        // direction (normalized), origin, length, color(hex)
-//        var origin = new THREE.Vector3(50, 100, 50);
-//        var terminus = new THREE.Vector3(75, 75, 75);
-//        var direction = new THREE.Vector3().subVectors(terminus, origin).normalize();
-//        var arrow = new THREE.ArrowHelper(direction, origin, 50, 0x884400);
-//        me.scene.add(arrow);
     },
-    makeTextSprite: function (message, parameters) {
 
-        var me = this;
-        if (parameters === undefined) parameters = {};
-
-        var fontface = parameters.hasOwnProperty("fontface") ?
-            parameters["fontface"] : "Arial";
-
-        var fontsize = parameters.hasOwnProperty("fontsize") ?
-            parameters["fontsize"] : 18;
-
-        var borderThickness = parameters.hasOwnProperty("borderThickness") ?
-            parameters["borderThickness"] : 4;
-
-        var borderColor = parameters.hasOwnProperty("borderColor") ?
-            parameters["borderColor"] : { r: 0, g: 0, b: 0, a: 1.0 };
-
-        var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-            parameters["backgroundColor"] : { r: 255, g: 255, b: 255, a: 1.0 };
-
-        var spriteAlignment = THREE.SpriteAlignment.topLeft;
-
-        var canvas = document.createElement('canvas');
-        var context = canvas.getContext('2d');
-        context.font = "Bold " + fontsize + "px " + fontface;
-
-        // get size data (height depends only on font size)
-        var metrics = context.measureText(message);
-        var textWidth = metrics.width;
-
-        // background color
-        context.fillStyle = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
-            + backgroundColor.b + "," + backgroundColor.a + ")";
-        // border color
-        context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
-            + borderColor.b + "," + borderColor.a + ")";
-
-        context.lineWidth = borderThickness;
-        me.roundRect(context, borderThickness / 2, borderThickness / 2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
-        // 1.4 is extra height factor for text below baseline: g,j,p,q.
-
-        // text color
-        context.fillStyle = "rgba(0, 0, 0, 1.0)";
-
-        context.fillText(message, borderThickness, fontsize + borderThickness);
-
-        // canvas contents will be used for a texture
-        var texture = new THREE.Texture(canvas)
-        texture.needsUpdate = true;
-
-        var spriteMaterial = new THREE.SpriteMaterial(
-            { map: texture, useScreenCoordinates: false, alignment: spriteAlignment });
-        var sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(100, 50, 1.0);
-        return sprite;
-    },
-    roundRect: function (ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    },
     addTxt: function (x, z, text) {
         var me = this;
         var canvas1 = document.createElement('canvas');
+        canvas1.height = 50;
+        canvas1.width = 350
         var context1 = canvas1.getContext('2d');
-        context1.font = "Bold 40px Arial";
+        context1.font = "40px Arial";
         context1.fillStyle = "rgba(255,0,0,0.95)";
-        context1.fillText(text, 0, 60);
+        context1.fillText(text + " ", 0, 30);
 
         // canvas contents will be used for a texture
         var texture1 = new THREE.Texture(canvas1)
         texture1.needsUpdate = true;
 
-        var material1 = new THREE.MeshBasicMaterial({map: texture1, side: THREE.DoubleSide });
-        material1.transparent = true;
+        var material1 = new THREE.MeshBasicMaterial({map: texture1});
+        // material1.transparent = true;
 
 
         var mesh1 = new THREE.Mesh(
-            new THREE.PlaneGeometry(400, canvas1.height),
+            new THREE.PlaneGeometry(canvas1.width, canvas1.height),
             material1
         );
 
 
         mesh1.position.set(x, 0, z);
-        mesh1.rotation.x = 90 * Math.PI / 180
+        // mesh1.rotation.x = 90 * Math.PI / 180
         me.scene.add(mesh1);
 
         mesh1.updateMatrixWorld()
 
+
         me.getColissionArray().push(mesh1)
 
-        if(me.checkCube(mesh1)){
-            mesh1.translateX(100);
-            mesh1.translateY(100);
-            mesh1.translateZ(250);
-
-            mesh1.updateMatrixWorld()
-            if(me.checkCube(mesh1)){
-                mesh1.translateZ(500);
-                mesh1.updateMatrixWorld()
-                if(me.checkCube(mesh1)){
-                    console.log('still')
-                }
-
-                //me.scene.remove(mesh1)
-
-            }
-
-        }
+        return mesh1
 
     },
     addCube: function (x, y, z) {
         var me = this,
-            cubeGeometry = new THREE.CubeGeometry(400, 100, 10);
-        var cubeMaterial = new THREE.MeshBasicMaterial({color: 0x8888ff});
+            cubeGeometry = new THREE.CubeGeometry(400, 50, 10);
+        var cubeMaterial = new THREE.MeshNormalMaterial({color: 0x8888ff});
         var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
         cube.position.set(x, y, z);
         cube.rotation.x = 90 * Math.PI / 180
@@ -477,62 +402,76 @@ Ext.define('EM.view.Scene', {
 
 
     },
-    checkCube: function (cube) {
+    checkMyPosition: function (cube) {
         var ray,
             hit = false,
             me = this;
 
         var collisions, i,
-        // Maximum distance from the origin before we consider collision
-            distance = 200;
+            distance = 50;
+
+        me.rays = [
+            new THREE.Vector3(0, 0, -1),
+            new THREE.Vector3(1, 0, -1),
+            new THREE.Vector3(-1, 0, -1)
+        ];
 
         me.caster = new THREE.Raycaster();
-        //me.scene.add(cube);
+
+        cube.translateZ(30);
+        cube.updateMatrixWorld()
+
+
+        for (i = 0; i < this.rays.length; i += 1) {
+            me.caster.set(cube.position.clone(), this.rays[i]);
+            collisions = this.caster.intersectObjects(me.getColissionArray());
+            if (collisions.length > 0 && collisions[0].distance <= distance) {
+                hit = true
+            }
+        }
+        cube.translateZ(-30);
+
+        if (collisions.length > 0 && collisions[0].distance <= distance) {
+            hit = true
+        }
+
+
+        cube.updateMatrixWorld()
+
+        if (hit === false) {
+            hit = me.checkCube(cube)
+        }
+
+
+        return hit === true ? hit : false
+    },
+    checkCube: function (cube) {
+
+        var ray,
+            hit = false,
+            me = this,
+            collisions, i,
+            distance = 50;
+
+        me.caster = new THREE.Raycaster();
         me.rays = [
             new THREE.Vector3(1, 0, -1),
             new THREE.Vector3(1, 0, 1),
             new THREE.Vector3(1, 0, 0),
-            new THREE.Vector3(1, 0, -1),
             new THREE.Vector3(0, 0, -1),
+            new THREE.Vector3(0, 0, 1),
             new THREE.Vector3(-1, 0, -1),
             new THREE.Vector3(-1, 0, 0),
             new THREE.Vector3(-1, 0, 1)
 
         ];
-        //console.log(me.rays[0])
         for (i = 0; i < this.rays.length; i += 1) {
-            me.caster.set(cube.position.clone()
-                , this.rays[i]);
-
-
-            //me.scene.add(new THREE.ArrowHelper(this.rays[i].normalize()), cube.position, 200, 0xffffff )
+            me.caster.set(cube.position.clone(), this.rays[i]);
             collisions = this.caster.intersectObjects(me.getColissionArray());
             if (collisions.length > 0 && collisions[0].distance <= distance) {
-                //console.log(i, collisions[0].distance)
                 hit = true
             }
         }
-
-//        var originPoint = cube.position.clone();
-//
-//
-//        var hit = false;
-//        for (var vertexIndex = 0; vertexIndex < cube.geometry.vertices.length; vertexIndex++) {
-//            var localVertex = cube.geometry.vertices[vertexIndex].clone();
-//            var globalVertex = localVertex.applyMatrix4(cube.matrix);
-//            var directionVector = globalVertex.sub(cube.position);
-//            var ray = new THREE.Raycaster(originPoint, directionVector.clone());
-//            var collisionResults = ray.intersectObjects(me.getColissionArray());
-//
-//
-//            if (collisionResults.length > 0 && collisionResults[0].distance < 2000) {
-//
-//                hit = true
-//
-//            }
-//
-//        }
-
         return hit === true ? hit : false
 
     }

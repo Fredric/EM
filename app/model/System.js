@@ -18,7 +18,8 @@ Ext.define('EM.model.System', {
             },
             'ObjName',
             'ObjType',
-            'destination'
+            'destination',
+            'sector'
         ]
     }
 
